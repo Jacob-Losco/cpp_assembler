@@ -1,0 +1,18 @@
+LDUR R2, [R1, #4]
+LABELA:
+B L2
+ADD R1, R2, R3 # AnthonyPouliot 
+CBNZ R4, LABELA # JacobLosco
+SUBIS R1, R1, #7
+SUBS R7, R7, R2
+LSL R7, R27, #46
+ADDI R6, R2, #14
+LABELB: 
+ADDIS R6, R6, #2 # WilliamBirmingham
+SUBI R7, R1, #9
+L2:
+STUR R2, [R1, #4]
+ADDS R2, R1, R4
+SUB R1, R2, R7
+LSR R15, R16, #2
+CBZ R31, LABELB
