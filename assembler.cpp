@@ -48,7 +48,6 @@ int main() {
     while(!assemblyInput.eof()) {
         lineCount++; //on next line
         assemblyInput >> commandString;
-        cout << commandString << endl;
         bitset<11> opcode = opcodeMap[commandString]; //get binary opcode in 11 bits.
         if(opcode != 0x0) { //if the opcode exists
             string finalLineOutput; //the final string that will be printed to a line of the output file
@@ -61,7 +60,7 @@ int main() {
                 case 0x69B: 
                 case 0x69A: {
                     //push size 11 opcode to output
-                    finalLineOutput += opcode.to_string();
+                    finalLineOutput += opcode.to_string() + " ";
 
                     //TODO, for now trash input
                     string trash;
@@ -81,7 +80,7 @@ int main() {
                     while(!opcode[opcode.size() -1]) //while the MSB of testInit is not 1, shift left
                         opcode <<= 1;
                     reducedOpcode = bitset<10> (opcode.to_string().substr(0, opcode.size() - (opcode.size() - reducedOpcode.size()))); //remove zeros off the end until it fits new size
-                    finalLineOutput += reducedOpcode.to_string();
+                    finalLineOutput += reducedOpcode.to_string() + " ";
 
                     //TODO, for now trash input
                     string trash;
@@ -95,7 +94,7 @@ int main() {
                 case 0x7C2:
                 case 0x7C0: {
                     //push size 11 opcode to output
-                    finalLineOutput += opcode.to_string();
+                    finalLineOutput += opcode.to_string() + " ";
 
                     //TODO, for now trash input
                     string trash;
@@ -107,7 +106,7 @@ int main() {
 
                 //BRANCH FORMAT:
                 case 0x0A0: {
-                    finalLineOutput += "000101"; //hardcoded since reduced opcode for b does not follow standard rules
+                    finalLineOutput += "000101 "; //hardcoded since reduced opcode for b does not follow standard rules
 
                     //TODO, for now trash input
                     string trash;
@@ -123,7 +122,7 @@ int main() {
                     while(!opcode[opcode.size() -1]) //while the MSB of testInit is not 1, shift left 1
                         opcode <<= 1;
                     reducedOpcode = bitset<8> (opcode.to_string().substr(0, opcode.size() - (opcode.size() - reducedOpcode.size()))); //remove zeros off the end until it fits new size
-                    finalLineOutput += reducedOpcode.to_string();
+                    finalLineOutput += reducedOpcode.to_string() + " ";
 
                     //TODO, for now trash input
                     string trash;
