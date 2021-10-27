@@ -195,9 +195,9 @@ int main() {
                 case 0x0A0: {
                     finalLineOutput += "000101 "; //hardcoded since reduced opcode for b does not follow standard rules
 
-                    //TODO, for now trash input
-                    string trash;
-                    assemblyInput >> trash;
+                    string labelName;
+                    assemblyInput >> labelName;
+                    finalLineOutput += labelName;
                     break;
                 }
 
