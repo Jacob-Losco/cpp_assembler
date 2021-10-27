@@ -9,4 +9,3 @@ Submission:
         -- includes TODOs because this is only a partial submission of the final project
     opcodes_only.exe - the executable for ^.
     DevTest.txt - a sample input file that devs used for testing
-    DevTest_output.txt - the resulted output from the running the program with the file 'DevTest.txt'
