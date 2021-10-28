@@ -130,7 +130,6 @@ int main() {
                     bitset<6> shamtValue;
                     string thirdString;
                     assemblyInput >> thirdString;
-                    cout << thirdString << endl;
                     if(thirdString.length() != 2 || thirdString.length() != 3) {
                         if(thirdString.at(0) == 'R' || rdString.at(0) == 'X') {
                             shamtValue = bitset<6> (0);
