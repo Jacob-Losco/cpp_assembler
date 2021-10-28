@@ -28,6 +28,7 @@ int main() {
         {"LSL", 0x69B},
         {"LSR", 0x69A}
     };
+    map<string, int> labelMap;
     string assemblyFileName;
     int lineCount = 0;
     bool fileValid = false;
@@ -313,6 +314,9 @@ int main() {
 
                     string labelName;
                     assemblyInput >> labelName;
+                    //if label has not been declared, leave a warning flag. Will error out at the end if this label is never declared
+                    if(labelMap[labelName] == 0) 
+                        labelMap[labelName] == -1;
                     finalLineOutput += labelName;
                     break;
                 }
@@ -342,10 +346,17 @@ int main() {
             assemblyInput >> trash;
             lineCount--;
         }
+        //if it is a label, save the label name and the index of the next line in the code
+        else if(commandString.back() == ':')
+            labelMap[commandString.substr(0, commandString.length() - 1)] = lineCount + 1;
         //if not a proper instruction/comment/label, error out for reason invalid instruction/label
-        else if(commandString.back() != ':') {
+        else
             errorOutAndExit(machineOutput, lineCount, "\'" + commandString + "\' is not a valid Instruction Name or Label.");
-        }
+    }
+    //check to see if any used labels were never declared
+    for(map<string, int>::iterator i = labelMap.begin(); i != labelMap.end(); i++) {
+        if(i->second == 0)
+            errorOutAndExit(machineOutput, lineCount, "\'" + i->first + "\' was used as a label in code but was never declared.");
     }
     assemblyInput.close();
     machineOutput << "-- End of Program --";
