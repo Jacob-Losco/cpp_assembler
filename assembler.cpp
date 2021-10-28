@@ -63,10 +63,127 @@ int main() {
                     //push size 11 opcode to output
                     finalLineOutput += opcode.to_string() + " ";
 
-                    string trash;
-                    assemblyInput >> trash;
-                    assemblyInput >> trash;
-                    assemblyInput >> trash;
+                    // get rd value
+                    bitset<5> rdValue;
+                    string rdString;
+                    assemblyInput >> rdString;
+                    if(rdString.length() != 3  && rdString.length() != 4)
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' invalid length for register reference");
+                    else if(rdString.at(0) != 'R' && rdString.at(0) != 'X')
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' is not a proper way to reference a register");
+                    else if(rdString.at(rdString.length() - 1) != ',')
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' missing comma");
+                    if(isdigit(rdString.at(1))) {
+                        string rdValueString;
+                        if(rdString.length() == 4) {
+                            if(isdigit(rdString.at(2)))
+                                rdValueString = rdString.substr(1, 2);
+                            else
+                                errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' is not a proper way to reference a register");
+                        }
+                        else
+                            rdValueString = rdString.substr(1, 1);
+                        stringstream rdValueStream;
+                        int rdValueInt;
+                        rdValueStream << rdValueString;
+                        rdValueStream >> rdValueInt;
+                        rdValue = bitset<5> (rdValueInt);
+                        if(rdValue.to_ulong() < 0 || rdValue.to_ulong() > 31) 
+                            errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' referenced a register number that does not exist");
+                    }
+                    else
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' is not a proper way to reference a register");
+                     
+                    //get rn value
+                    bitset<5> rnValue;
+                    string rnString;
+                    assemblyInput >> rnString;
+                    if(rnString.length() != 3  && rnString.length() != 4)
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' invalid length for register reference");
+                    else if(rnString.at(0) != 'R' && rnString.at(0) != 'X')
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
+                    else if(rnString.at(rnString.length() - 1) != ',')
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' missing comma");
+                    if(isdigit(rnString.at(1))) {
+                        string rnValueString;
+                        if(rnString.length() == 4) {
+                            if(isdigit(rnString.at(2)))
+                                rnValueString = rnString.substr(1, 2);
+                            else
+                                errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
+                        }
+                        else
+                            rnValueString = rnString.substr(1, 1);
+                        stringstream rnValueStream;
+                        int rnValueInt;
+                        rnValueStream << rnValueString;
+                        rnValueStream >> rnValueInt;
+                        rnValue = bitset<5> (rnValueInt);
+                        if(rnValue.to_ulong() < 0 || rnValue.to_ulong() > 31) 
+                            errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' referenced a register number that does not exist");
+                    }
+                    else
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
+
+                    //get rm value OR shamtValue, depending on the instruction
+                    bitset<5> rmValue;
+                    bitset<6> shamtValue;
+                    string thirdString;
+                    assemblyInput >> thirdString;
+                    cout << thirdString << endl;
+                    if(thirdString.length() != 2 || thirdString.length() != 3) {
+                        if(thirdString.at(0) == 'R' || rdString.at(0) == 'X') {
+                            shamtValue = bitset<6> (0);
+                            if(isdigit(thirdString.at(1))) {
+                                string rmValueString;
+                                if(thirdString.length() == 3) {
+                                    if(isdigit(thirdString.at(2)))
+                                        rmValueString = thirdString.substr(1, 2);
+                                    else
+                                        errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "\' is not a proper way to reference a register");
+                                }
+                                else
+                                    rmValueString = thirdString.substr(1, 1);
+                                stringstream rmValueStream;
+                                int rmValueInt;
+                                rmValueStream << rmValueString;
+                                rmValueStream >> rmValueInt;
+                                rmValue = bitset<5> (rmValueInt);
+                                if(rmValue.to_ulong() < 0 || rmValue.to_ulong() > 31) 
+                                    errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "'\' referenced a register number that does not exist");
+                            }
+                            else
+                                errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "\' is not a proper way to reference a register");
+                        }
+                        else if(thirdString.at(0) == '#') {
+                            rmValue = bitset<5> (0);
+                            if(isdigit(thirdString.at(1))) {
+                                string shamtValueString;
+                                if(thirdString.length() == 3) {
+                                    if(isdigit(thirdString.at(2)))
+                                        shamtValueString = thirdString.substr(1, 2);
+                                    else
+                                        errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "\' is not a proper way to reference a register");
+                                }
+                                else
+                                    shamtValueString = thirdString.substr(1, 1);
+                                stringstream shamtValueStream;
+                                int shamtValueInt;
+                                shamtValueStream << shamtValueString;
+                                shamtValueStream >> shamtValueInt;
+                                shamtValue = bitset<6> (shamtValueInt);
+                            }
+                            else
+                                errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "\' is not a proper way to reference a register");
+                        }
+                        else {
+                            errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "\' is not a proper way to reference a register or an immediate");
+                        }
+                    }
+                    else
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "\' invalid length for register reference");
+
+                    finalLineOutput += rmValue.to_string() + " " + shamtValue.to_string() + " " + rnValue.to_string() + " " + rdValue.to_string();
                     break;
                 }
 
@@ -93,7 +210,7 @@ int main() {
                     else if(rdString.at(rdString.length() - 1) != ',')
                         errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' missing comma");
                     if(isdigit(rdString.at(1))) {
-                        string rdValueString = "";
+                        string rdValueString;
                         if(rdString.length() == 4) {
                             if(isdigit(rdString.at(2)))
                                 rdValueString = rdString.substr(1, 2);
@@ -113,7 +230,7 @@ int main() {
                     else
                         errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' is not a proper way to reference a register");
                      
-                    //get rm value
+                    //get rn value
                     bitset<5> rnValue;
                     string rnString;
                     assemblyInput >> rnString;
@@ -124,7 +241,7 @@ int main() {
                     else if(rnString.at(rnString.length() - 1) != ',')
                         errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' missing comma");
                     if(isdigit(rnString.at(1))) {
-                        string rnValueString = "";
+                        string rnValueString;
                         if(rnString.length() == 4) {
                             if(isdigit(rnString.at(2)))
                                 rnValueString = rnString.substr(1, 2);
@@ -153,7 +270,7 @@ int main() {
                     else if(immString.at(0) != '#')
                         errorOutAndExit(machineOutput, lineCount, "\'" + immString + "'\' is not a proper way to reference an immediate");
                     if(isdigit(immString.at(1))) {
-                        string immValueString = "";
+                        string immValueString;
                         if(immString.length() == 3) {
                             if(isdigit(immString.at(2)))
                                 immValueString = immString.substr(1, 2);
