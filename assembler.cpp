@@ -330,13 +330,45 @@ int main() {
                         opcode <<= 1;
                     reducedOpcode = bitset<8> (opcode.to_string().substr(0, opcode.size() - (opcode.size() - reducedOpcode.size()))); //remove zeros off the end until it fits new size
                     finalLineOutput += reducedOpcode.to_string() + " ";
+                    //get rt value
+                    bitset<5> rtValue;
+                    string rtString;
+                    assemblyInput >> rtString;
+                    if(rtString.length() != 3  && rtString.length() != 4)
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rtString + "'\' invalid length for register reference");
+                    else if(rtString.at(0) != 'R' && rtString.at(0) != 'X')
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rtString + "'\' is not a proper way to reference a register");
+                    else if(rdString.at(rdString.length() - 1) != ',')
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' missing comma");
+                    if(isdigit(rtString.at(1))) {
+                        string rtValueString;
+                        if(rtString.length() == 4) {
+                            if(isdigit(rtString.at(2)))
+                                rtValueString = rtString.substr(1, 2);
+                            else
+                                errorOutAndExit(machineOutput, lineCount, "\'" + rtString + "'\' is not a proper way to reference a register");
+                        }
+                        else
+                            rtValueString = rtString.substr(1, 1);
+                        stringstream rtValueStream;
+                        int rtValueInt;
+                        rtValueStream << rtValueString;
+                        rtValueStream >> rtValueInt;
+                        rtValue = bitset<5> (rtValueInt);
+                        if(rtValue.to_ulong() < 0 || rtValue.to_ulong() > 31)
+                            errorOutAndExit(machineOutput, lineCount, "\'" + rtString + "'\' referenced a register number that does not exist");
+                    }
+                    else
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rtString + "'\' is not a proper way to reference a register");
 
-                    //TODO, for now trash input
-                    string trash;
-                    assemblyInput >> trash;
-                    assemblyInput >> trash;
-                    break;
+                    //retrieve label
+                    string labelName;
+                    assemblyInput >> labelName;
+                    //if label has not been declared, leave a warning flag. Will error out at the end if this label is never declared
+                    if(labelMap[labelName] == 0)
+                        labelMap[labelName] == -1;
                 }
+                finalLineOutput += labelName + " " + rtValue.to_string();
             }
             machineOutput << finalLineOutput << endl; //print to line in file
         }
