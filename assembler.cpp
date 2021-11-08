@@ -40,16 +40,17 @@ int main() {
         assemblyInput = ifstream(assemblyFileName);
         if(assemblyInput.good())
             fileValid = true;
-        else 
+        else
             cout << "\nno file found with that name... please enter a valid file name: ";
     }
     machineOutput = ofstream(assemblyFileName.substr(0, assemblyFileName.find(".")) + "_output.txt");
-    
+
     string commandString;
     //while there is still content to read from file
     while(!assemblyInput.eof()) {
         lineCount++; //on next line
         assemblyInput >> commandString;
+        cout << commandString << endl;
         bitset<11> opcode = opcodeMap[commandString]; //get binary opcode in 11 bits.
         if(opcode != 0x0) { //if the opcode exists
             string finalLineOutput; //the final string that will be printed to a line of the output file
@@ -58,8 +59,8 @@ int main() {
                 case 0x458:
                 case 0x558:
                 case 0x658:
-                case 0x758: 
-                case 0x69B: 
+                case 0x758:
+                case 0x69B:
                 case 0x69A: {
                     //push size 11 opcode to output
                     finalLineOutput += opcode.to_string() + " ";
@@ -89,12 +90,12 @@ int main() {
                         rdValueStream << rdValueString;
                         rdValueStream >> rdValueInt;
                         rdValue = bitset<5> (rdValueInt);
-                        if(rdValue.to_ulong() < 0 || rdValue.to_ulong() > 31) 
+                        if(rdValue.to_ulong() < 0 || rdValue.to_ulong() > 31)
                             errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' referenced a register number that does not exist");
                     }
                     else
                         errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' is not a proper way to reference a register");
-                     
+
                     //get rn value
                     bitset<5> rnValue;
                     string rnString;
@@ -120,7 +121,7 @@ int main() {
                         rnValueStream << rnValueString;
                         rnValueStream >> rnValueInt;
                         rnValue = bitset<5> (rnValueInt);
-                        if(rnValue.to_ulong() < 0 || rnValue.to_ulong() > 31) 
+                        if(rnValue.to_ulong() < 0 || rnValue.to_ulong() > 31)
                             errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' referenced a register number that does not exist");
                     }
                     else
@@ -149,7 +150,7 @@ int main() {
                                 rmValueStream << rmValueString;
                                 rmValueStream >> rmValueInt;
                                 rmValue = bitset<5> (rmValueInt);
-                                if(rmValue.to_ulong() < 0 || rmValue.to_ulong() > 31) 
+                                if(rmValue.to_ulong() < 0 || rmValue.to_ulong() > 31)
                                     errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "'\' referenced a register number that does not exist");
                             }
                             else
@@ -224,12 +225,12 @@ int main() {
                         rdValueStream << rdValueString;
                         rdValueStream >> rdValueInt;
                         rdValue = bitset<5> (rdValueInt);
-                        if(rdValue.to_ulong() < 0 || rdValue.to_ulong() > 31) 
+                        if(rdValue.to_ulong() < 0 || rdValue.to_ulong() > 31)
                             errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' referenced a register number that does not exist");
                     }
                     else
                         errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' is not a proper way to reference a register");
-                     
+
                     //get rn value
                     bitset<5> rnValue;
                     string rnString;
@@ -255,7 +256,7 @@ int main() {
                         rnValueStream << rnValueString;
                         rnValueStream >> rnValueInt;
                         rnValue = bitset<5> (rnValueInt);
-                        if(rnValue.to_ulong() < 0 || rnValue.to_ulong() > 31) 
+                        if(rnValue.to_ulong() < 0 || rnValue.to_ulong() > 31)
                             errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' referenced a register number that does not exist");
                     }
                     else
@@ -284,7 +285,7 @@ int main() {
                         immValueStream << immValueString;
                         immValueStream >> immValueInt;
                         immValue = bitset<12> (immValueInt);
-                        if(immValue.to_ulong() < 0 || immValue.to_ulong() > 31) 
+                        if(immValue.to_ulong() < 0 || immValue.to_ulong() > 31)
                             errorOutAndExit(machineOutput, lineCount, "\'" + immString + "'\' referenced a register number that does not exist");
                     }
                     else
@@ -315,7 +316,7 @@ int main() {
                     string labelName;
                     assemblyInput >> labelName;
                     //if label has not been declared, leave a warning flag. Will error out at the end if this label is never declared
-                    if(labelMap[labelName] == 0) 
+                    if(labelMap[labelName] == 0)
                         labelMap[labelName] == -1;
                     finalLineOutput += labelName;
                     break;
@@ -338,8 +339,8 @@ int main() {
                         errorOutAndExit(machineOutput, lineCount, "\'" + rtString + "'\' invalid length for register reference");
                     else if(rtString.at(0) != 'R' && rtString.at(0) != 'X')
                         errorOutAndExit(machineOutput, lineCount, "\'" + rtString + "'\' is not a proper way to reference a register");
-                    else if(rdString.at(rdString.length() - 1) != ',')
-                        errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "'\' missing comma");
+                    else if(rtString.at(rtString.length() - 1) != ',')
+                        errorOutAndExit(machineOutput, lineCount, "\'" + rtString + "'\' missing comma");
                     if(isdigit(rtString.at(1))) {
                         string rtValueString;
                         if(rtString.length() == 4) {
@@ -367,8 +368,8 @@ int main() {
                     //if label has not been declared, leave a warning flag. Will error out at the end if this label is never declared
                     if(labelMap[labelName] == 0)
                         labelMap[labelName] == -1;
+                    finalLineOutput += labelName + " " + rtValue.to_string();
                 }
-                finalLineOutput += labelName + " " + rtValue.to_string();
             }
             machineOutput << finalLineOutput << endl; //print to line in file
         }
