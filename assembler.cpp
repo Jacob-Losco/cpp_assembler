@@ -347,7 +347,7 @@ int main() {
       string labelName = i->first.substr(0, i->first.length() - 2); //get the actual label name without the id and format tag
       //if a label was called but never declared, error out
       if(labelDeclarationMap[labelName] == 0)
-        errorOutAndExit(machineOutput, lineCount, "\'" + i->first + "\' was used as a label in code but was never declared.");
+        errorOutAndExit(machineOutput, lineCount, "\'" + i->first.substr(0, i->first.length() - 2) + "\' was used as a label in code but was never declared.");
       bitset<21> resolvedLabelCode;
       int instructionDistance = labelDeclarationMap[labelName] - i->second;
       //if the distance is negative, do extra operations to get two's complement of number
