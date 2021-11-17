@@ -11,8 +11,16 @@ using namespace std;
   //lineNumber - the index of what line of the machine code we are writing
   //registerString - the string containing some code that needs to be translated to a register binary
   //isEnd - determines whether or not we should check to see if there is a comma at the end of the string
+//postcondition:
+  //returns the 5 bit binary representing this register
 bitset<5> getRegister(ofstream& output, int lineNumber, string registerString, bool isEnd);
 
+//precondition:
+  //output - an output stream for writing error messages to
+  //lineNumber - the line that an error was detected
+  //reason - reasoning for why the assembly input is bad
+//postcondition:
+  //prints to console and file that/why the assembly input is invalid and exits healthily
 void errorOutAndExit(ofstream& output, int lineNumber, string reason);
 
 int main() {
@@ -35,10 +43,11 @@ int main() {
         {"LSL", 0x69B},
         {"LSR", 0x69A}
     };
-    map<string, int> labelDeclarationMap;
-    map<string, int> labelCallMap;
+    map<string, int> labelDeclarationMap; //map of all label declarations, and the lines that those labels point to
+    map<string, int> labelCallMap; //map of all the label calls, and the lines where those calls were made
     string assemblyFileName;
-    int lineCount = 0;
+    int inputLineCount = 0; //represents the line of input. Used in showing what line has errors
+    int outputLineCount = 0; //represents the line of output. Used for label resolution
     bool fileValid = false;
 
     //input and output file stream setups
@@ -57,7 +66,8 @@ int main() {
     string finalFileOutput; //the final string that will be printed to the output file
     //while there is still content to read from file
     while(!assemblyInput.eof()) {
-        lineCount++; //on next line
+        inputLineCount++; //on next line
+        outputLineCount++;
         commandString = "";
         assemblyInput >> commandString;
         bitset<11> opcode = opcodeMap[commandString]; //get binary opcode in 11 bits.
@@ -78,13 +88,13 @@ int main() {
                     bitset<5> rdValue;
                     string rdString;
                     assemblyInput >> rdString;
-                    rdValue = getRegister(machineOutput, lineCount, rdString, false);
+                    rdValue = getRegister(machineOutput, inputLineCount, rdString, false);
 
                     //get rn value
                     bitset<5> rnValue;
                     string rnString;
                     assemblyInput >> rnString;
-                    rnValue = getRegister(machineOutput, lineCount, rnString, false);
+                    rnValue = getRegister(machineOutput, inputLineCount, rnString, false);
 
                     //get rm value OR shamtValue, depending on the instruction
                     bitset<5> rmValue;
@@ -94,7 +104,7 @@ int main() {
                     if(thirdString.length() != 2 || thirdString.length() != 3) {
                         if(thirdString.at(0) == 'R' || rdString.at(0) == 'X') {
                             shamtValue = bitset<6> (0);
-                            rmValue = getRegister(machineOutput, lineCount, thirdString, true);
+                            rmValue = getRegister(machineOutput, inputLineCount, thirdString, true);
                         }
                         else if(thirdString.at(0) == '#') {
                             rmValue = bitset<5> (0);
@@ -104,7 +114,7 @@ int main() {
                                     if(isdigit(thirdString.at(2)))
                                         shamtValueString = thirdString.substr(1, 2);
                                     else
-                                        errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "\' is not a proper way to reference a register");
+                                        errorOutAndExit(machineOutput, inputLineCount, "\'" + thirdString + "\' is not a proper way to reference a register");
                                 }
                                 else
                                     shamtValueString = thirdString.substr(1, 1);
@@ -115,14 +125,14 @@ int main() {
                                 shamtValue = bitset<6> (shamtValueInt);
                             }
                             else
-                                errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "\' is not a proper way to reference a register");
+                                errorOutAndExit(machineOutput, inputLineCount, "\'" + thirdString + "\' is not a proper way to reference a register");
                         }
                         else {
-                            errorOutAndExit(machineOutput, lineCount, "\'" + thirdString + "\' is not a proper way to reference a register or an immediate");
+                            errorOutAndExit(machineOutput, inputLineCount, "\'" + thirdString + "\' is not a proper way to reference a register or an immediate");
                         }
                     }
                     else
-                        errorOutAndExit(machineOutput, lineCount, "\'" + rdString + "\' invalid length for register reference");
+                        errorOutAndExit(machineOutput, inputLineCount, "\'" + rdString + "\' invalid length for register reference");
 
                     finalFileOutput += rmValue.to_string() + " " + shamtValue.to_string() + " " + rnValue.to_string() + " " + rdValue.to_string() + "\n";
                     break;
@@ -144,29 +154,29 @@ int main() {
                     bitset<5> rdValue;
                     string rdString;
                     assemblyInput >> rdString;
-                    rdValue = getRegister(machineOutput, lineCount, rdString, false);
+                    rdValue = getRegister(machineOutput, inputLineCount, rdString, false);
 
                     //get rn value
                     bitset<5> rnValue;
                     string rnString;
                     assemblyInput >> rnString;
-                    rnValue = getRegister(machineOutput, lineCount, rnString, false);
+                    rnValue = getRegister(machineOutput, inputLineCount, rnString, false);
 
                     //get ALU_immediate value
                     bitset<12> immValue;
                     string immString;
                     assemblyInput >> immString;
                     if(immString.length() != 2  && immString.length() != 3)
-                        errorOutAndExit(machineOutput, lineCount, "\'" + immString + "\' invalid length for immediate reference");
+                        errorOutAndExit(machineOutput, inputLineCount, "\'" + immString + "\' invalid length for immediate reference");
                     else if(immString.at(0) != '#')
-                        errorOutAndExit(machineOutput, lineCount, "\'" + immString + "\' is not a proper way to reference an immediate");
+                        errorOutAndExit(machineOutput, inputLineCount, "\'" + immString + "\' is not a proper way to reference an immediate");
                     if(isdigit(immString.at(1))) {
                         string immValueString;
                         if(immString.length() == 3) {
                             if(isdigit(immString.at(2)))
                                 immValueString = immString.substr(1, 2);
                             else
-                                errorOutAndExit(machineOutput, lineCount, "\'" + immString + "\' is not a proper way to reference an immediate");
+                                errorOutAndExit(machineOutput, inputLineCount, "\'" + immString + "\' is not a proper way to reference an immediate");
                         }
                         else
                             immValueString = immString.substr(1, 1);
@@ -176,10 +186,10 @@ int main() {
                         immValueStream >> immValueInt;
                         immValue = bitset<12> (immValueInt);
                         if(immValue.to_ulong() < 0 || immValue.to_ulong() > 31)
-                            errorOutAndExit(machineOutput, lineCount, "\'" + immString + "\' referenced a register number that does not exist");
+                            errorOutAndExit(machineOutput, inputLineCount, "\'" + immString + "\' referenced a register number that does not exist");
                     }
                     else
-                        errorOutAndExit(machineOutput, lineCount, "\'" + immString + "\' is not a proper way to reference a register");
+                        errorOutAndExit(machineOutput, inputLineCount, "\'" + immString + "\' is not a proper way to reference a register");
 
                     finalFileOutput += immValue.to_string() + " " + rnValue.to_string() + " " + rdValue.to_string() + "\n";
                     break;
@@ -195,27 +205,27 @@ int main() {
                   bitset<5> rtValue;
                   string rtString;
                   assemblyInput >> rtString;
-                  rtValue = getRegister(machineOutput, lineCount, rtString, false);
+                  rtValue = getRegister(machineOutput, inputLineCount, rtString, false);
 
                   //get rn value
                   bitset<5> rnValue;
                   string rnString;
                   assemblyInput >> rnString;
                   if (rnString.length() != 4 && rnString.length() != 5)
-                      errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' invalid length for register reference");
+                      errorOutAndExit(machineOutput, inputLineCount, "\'" + rnString + "'\' invalid length for register reference");
                   else if (rnString.at(0) != '[')
-                      errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' must include brackets for data format");
+                      errorOutAndExit(machineOutput, inputLineCount, "\'" + rnString + "'\' must include brackets for data format");
                   else if (rnString.at(1) != 'R' && rnString.at(1) != 'X')
-                      errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
+                      errorOutAndExit(machineOutput, inputLineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
                   else if (rnString.at(rnString.length() - 1) != ',')
-                      errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' missing comma");
+                      errorOutAndExit(machineOutput, inputLineCount, "\'" + rnString + "'\' missing comma");
                   if (isdigit(rnString.at(2))) {
                       string rnValueString;
                       if (rnString.length() == 5) {
                           if (isdigit(rnString.at(3)))
                               rnValueString = rnString.substr(2, 3);
                           else
-                              errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
+                              errorOutAndExit(machineOutput, inputLineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
                       }
                       else
                           rnValueString = rnString.substr(2, 2);
@@ -225,28 +235,28 @@ int main() {
                       rnValueStream >> rnValueInt;
                       rnValue = bitset<5>(rnValueInt);
                       if (rnValue.to_ulong() < 0 || rnValue.to_ulong() > 31)
-                          errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' referenced a register number that does not exist");
+                          errorOutAndExit(machineOutput, inputLineCount, "\'" + rnString + "'\' referenced a register number that does not exist");
                   }
                   else
-                      errorOutAndExit(machineOutput, lineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
+                      errorOutAndExit(machineOutput, inputLineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
 
                   //get DT_address value
                   bitset<12> offsetValue;
                   string offsetString;
                   assemblyInput >> offsetString;
                   if (offsetString.length() != 3 && offsetString.length() != 4)
-                      errorOutAndExit(machineOutput, lineCount, "\'" + offsetString + "\' invalid length for offset reference");
+                      errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' invalid length for offset reference");
                   else if (offsetString.at(0) != '#')
-                      errorOutAndExit(machineOutput, lineCount, "\'" + offsetString + "\' must include brackets for data format");
+                      errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' must include brackets for data format");
                   else if (offsetString.at(offsetString.length() - 1) != ']')
-                      errorOutAndExit(machineOutput, lineCount, "\'" + offsetString + "\' is not a proper way to reference an offset value");
+                      errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' is not a proper way to reference an offset value");
                   if (isdigit(offsetString.at(1))) {
                       string offsetValueString;
                       if (offsetString.length() == 5) {
                           if (isdigit(offsetString.at(2)))
                               offsetValueString = offsetString.substr(1, 2);
                           else
-                              errorOutAndExit(machineOutput, lineCount, "\'" + offsetString + "\' is not a proper way to reference an offset");
+                              errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' is not a proper way to reference an offset");
                       }
                       else
                           offsetValueString = offsetString.substr(1, 1);
@@ -256,10 +266,10 @@ int main() {
                       offsetValueStream >> offsetValueInt;
                       offsetValue = bitset<12>(offsetValueInt);
                       if (offsetValue.to_ulong() < 0 || offsetValue.to_ulong() > 31)
-                          errorOutAndExit(machineOutput, lineCount, "\'" + offsetString + "\' referenced a register number that does not exist");
+                          errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' referenced a register number that does not exist");
                   }
                   else
-                      errorOutAndExit(machineOutput, lineCount, "\'" + offsetString + "\' is not a proper way to reference a register");
+                      errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' is not a proper way to reference a register");
                   finalFileOutput += offsetValue.to_string() + " " + rnValue.to_string() + " " + rtValue.to_string() + "\n";
                   break;
                 }
@@ -270,16 +280,18 @@ int main() {
 
                     string labelName;
                     assemblyInput >> labelName;
-                    char callTag = 65;
+                    char callTag = 65; //the tag that allows multiple calls to the same label be unique
                     char labelFormat = 'B'; //used later to reduce bits for conditional branch
                     bool set = false;
                     do {
+                      //if there is no labelEntry in the call map with this name
                       if(labelCallMap[labelName + callTag + labelFormat] == 0) {
+                        //if the entry for this label exists already, alter is value to the lineCount, else create the entry in the map
                         map<string, int>::iterator changeElement = labelCallMap.find(labelName + callTag + labelFormat);
                         if(changeElement != labelCallMap.end())
-                          changeElement->second = lineCount;
+                          changeElement->second = outputLineCount;
                         else
-                          labelCallMap.insert(pair<string, int> (labelName + callTag + labelFormat, lineCount));
+                          labelCallMap.insert(pair<string, int> (labelName + callTag + labelFormat, outputLineCount));
                         set = true;
                       }
                       else
@@ -303,21 +315,23 @@ int main() {
                     bitset<5> rtValue;
                     string rtString;
                     assemblyInput >> rtString;
-                    rtValue = getRegister(machineOutput, lineCount, rtString, false);
+                    rtValue = getRegister(machineOutput, inputLineCount, rtString, false);
 
                     //retrieve label
                     string labelName;
                     assemblyInput >> labelName;
-                    char callTag = 65;
-                    char labelFormat = 'C'; //used later to reduce bits for conditional branch
+                    char callTag = 65; //the tag that allows multiple calls to the same label be unique
+                    char labelFormat = 'B'; //used later to reduce bits for conditional branch
                     bool set = false;
                     do {
+                      //if there is no labelEntry in the call map with this name
                       if(labelCallMap[labelName + callTag + labelFormat] == 0) {
+                        //if the entry for this label exists already, alter is value to the lineCount, else create the entry in the map
                         map<string, int>::iterator changeElement = labelCallMap.find(labelName + callTag + labelFormat);
                         if(changeElement != labelCallMap.end())
-                          changeElement->second = lineCount;
+                          changeElement->second = outputLineCount;
                         else
-                          labelCallMap.insert(pair<string, int> (labelName + callTag + labelFormat, lineCount));
+                          labelCallMap.insert(pair<string, int> (labelName + callTag + labelFormat, outputLineCount));
                         set = true;
                       }
                       else
@@ -331,23 +345,23 @@ int main() {
         else if(commandString == "#" || commandString == ""){
             string trash;
             assemblyInput >> trash;
-            lineCount--;
+            outputLineCount--;
         }
-        //if it is a label, save the label name and the index of the next line in the code
+        //if it is a label declaration, save the label name and the index of the next line in the code
         else if(commandString.back() == ':') {
-          labelDeclarationMap[commandString.substr(0, commandString.length() - 1)] = lineCount;
-          lineCount--;
+          labelDeclarationMap[commandString.substr(0, commandString.length() - 1)] = outputLineCount;
+          outputLineCount--;
         }
         //if not a proper instruction/comment/label, error out for reason invalid instruction/label
         else
-            errorOutAndExit(machineOutput, lineCount, "\'" + commandString + "\' is not a valid Instruction Name or Label.");
+            errorOutAndExit(machineOutput, inputLineCount, "\'" + commandString + "\' is not a valid Instruction Name or Label.");
     }
     //resolve label names, or error out if a label was called but never declared
     for(map<string, int>::iterator i = labelCallMap.begin(); i != labelCallMap.end(); i++) {
       string labelName = i->first.substr(0, i->first.length() - 2); //get the actual label name without the id and format tag
       //if a label was called but never declared, error out
       if(labelDeclarationMap[labelName] == 0)
-        errorOutAndExit(machineOutput, lineCount, "\'" + i->first.substr(0, i->first.length() - 2) + "\' was used as a label in code but was never declared.");
+        errorOutAndExit(machineOutput, inputLineCount, "\'" + labelName + "\' was used as a label in code but was never declared.");
       bitset<21> resolvedLabelCode;
       int instructionDistance = labelDeclarationMap[labelName] - i->second;
       //if the distance is negative, do extra operations to get two's complement of number
@@ -363,7 +377,7 @@ int main() {
       }
       else
         resolvedLabelCode = bitset<21>(instructionDistance); //create binary for the number of instructions that the program must jump to branch
-      //reduce bits from 26 to 21 if this is a conditional branch label
+      //sign extend from 21 to 26 bits if this is a branch format label
       if(i->first.at(i->first.length() - 1) == 'B') {
         bitset<26> resolvedBranchingLabelCode = bitset<26> (resolvedLabelCode.to_ulong());
         //replace the label string in the final output with the resolved binary
@@ -376,6 +390,7 @@ int main() {
         finalFileOutput.replace(indexOfLabelCall, i->first.length(), resolvedLabelCode.to_string());
       }
     }
+    //close streams / write to output / finish
     assemblyInput.close();
     machineOutput << finalFileOutput << "\n-- End of Program --";
     machineOutput.close();
@@ -419,8 +434,6 @@ bitset<5> getRegister(ofstream& output, int lineNumber, string registerString, b
   return registerValue;
 }
 
-//precondition: output is the stream to the output file
-//postcondition: writes to output and cl that there was an error at line lineNumber, and includes a reason.
 void errorOutAndExit(ofstream& output, int lineNumber, string reason) {
     output << "ERROR on line " << lineNumber << ": " << reason << endl;
     cout << "ERROR on line " << lineNumber << ": " << reason << endl;
