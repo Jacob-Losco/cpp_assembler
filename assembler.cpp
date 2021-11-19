@@ -240,39 +240,39 @@ int main() {
                   else
                       errorOutAndExit(machineOutput, inputLineCount, "\'" + rnString + "'\' is not a proper way to reference a register");
 
-                  //get DT_address value
-                  bitset<12> offsetValue;
-                  string offsetString;
-                  assemblyInput >> offsetString;
-                  if (offsetString.length() != 3 && offsetString.length() != 4)
-                      errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' invalid length for offset reference");
-                  else if (offsetString.at(0) != '#')
-                      errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' must include brackets for data format");
-                  else if (offsetString.at(offsetString.length() - 1) != ']')
-                      errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' is not a proper way to reference an offset value");
-                  if (isdigit(offsetString.at(1))) {
-                      string offsetValueString;
-                      if (offsetString.length() == 5) {
-                          if (isdigit(offsetString.at(2)))
-                              offsetValueString = offsetString.substr(1, 2);
+                      //get DT_address value
+                      bitset<9> offsetValue;
+                      string offsetString;
+                      assemblyInput >> offsetString;
+                      if (offsetString.length() != 3 && offsetString.length() != 4)
+                          errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' invalid length for offset reference");
+                      else if (offsetString.at(0) != '#')
+                          errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' must include brackets for data format");
+                      else if (offsetString.at(offsetString.length() - 1) != ']')
+                          errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' is not a proper way to reference an offset value");
+                      if (isdigit(offsetString.at(1))) {
+                          string offsetValueString;
+                          if (offsetString.length() == 5) {
+                              if (isdigit(offsetString.at(2)))
+                                  offsetValueString = offsetString.substr(1, 2);
+                              else
+                                  errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' is not a proper way to reference an offset");
+                          }
                           else
-                              errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' is not a proper way to reference an offset");
+                              offsetValueString = offsetString.substr(1, 1);
+                          stringstream offsetValueStream;
+                          int offsetValueInt;
+                          offsetValueStream << offsetValueString;
+                          offsetValueStream >> offsetValueInt;
+                          offsetValue = bitset<9>(offsetValueInt);
+                          if (offsetValue.to_ulong() < 0 || offsetValue.to_ulong() > 31)
+                              errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' referenced a register number that does not exist");
                       }
                       else
-                          offsetValueString = offsetString.substr(1, 1);
-                      stringstream offsetValueStream;
-                      int offsetValueInt;
-                      offsetValueStream << offsetValueString;
-                      offsetValueStream >> offsetValueInt;
-                      offsetValue = bitset<12>(offsetValueInt);
-                      if (offsetValue.to_ulong() < 0 || offsetValue.to_ulong() > 31)
-                          errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' referenced a register number that does not exist");
+                          errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' is not a proper way to reference a register");
+                      finalFileOutput += offsetValue.to_string() + " 00 " + rnValue.to_string() + " " + rtValue.to_string() + "\n"; //hardcoded "00" to represent secondary opcode
+                      break;
                   }
-                  else
-                      errorOutAndExit(machineOutput, inputLineCount, "\'" + offsetString + "\' is not a proper way to reference a register");
-                  finalFileOutput += offsetValue.to_string() + " " + rnValue.to_string() + " " + rtValue.to_string() + "\n";
-                  break;
-                }
 
                 //BRANCH FORMAT:
                 case 0x0A0: {
