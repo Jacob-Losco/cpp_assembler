@@ -380,6 +380,16 @@ int main() {
       //sign extend from 21 to 26 bits if this is a branch format label
       if(i->first.at(i->first.length() - 1) == 'B') {
         bitset<26> resolvedBranchingLabelCode = bitset<26> (resolvedLabelCode.to_ulong());
+        //if distance is negative, set the 5 msbs in the bitset
+        if(instructionDistance < 0) {
+          int count = 0;
+          int i = resolvedBranchingLabelCode.size() - 1;
+          while(count < 5) {
+            resolvedBranchingLabelCode.set(i);
+            i--;
+            count++;
+          }
+        }
         //replace the label string in the final output with the resolved binary
         int indexOfLabelCall = finalFileOutput.find(i->first);
         finalFileOutput.replace(indexOfLabelCall, i->first.length(), resolvedBranchingLabelCode.to_string());

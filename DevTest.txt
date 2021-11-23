@@ -1,6 +1,6 @@
 LDUR R2, [R1, #4]
-LABELA:
 B L2
+LABELA:
 ADD R1, R2, R3 # AnthonyPouliot
 CBNZ R4, LABELA # JacobLosco
 SUBIS R1, R1, #7
