@@ -321,7 +321,7 @@ int main() {
                     string labelName;
                     assemblyInput >> labelName;
                     char callTag = 65; //the tag that allows multiple calls to the same label be unique
-                    char labelFormat = 'B'; //used later to reduce bits for conditional branch
+                    char labelFormat = 'C'; //used later to reduce bits for conditional branch
                     bool set = false;
                     do {
                       //if there is no labelEntry in the call map with this name
@@ -377,6 +377,8 @@ int main() {
       }
       else
         resolvedLabelCode = bitset<21>(instructionDistance); //create binary for the number of instructions that the program must jump to branch
+      cout << i->first << endl;
+      cout << (i->first.at(i->first.length() - 1) == 'B') << endl;
       //sign extend from 21 to 26 bits if this is a branch format label
       if(i->first.at(i->first.length() - 1) == 'B') {
         bitset<26> resolvedBranchingLabelCode = bitset<26> (resolvedLabelCode.to_ulong());
